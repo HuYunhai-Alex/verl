@@ -86,7 +86,10 @@ class DAPORewardManager(AbstractRewardManager):
             if response_str.endswith(eos_token):
                 response_str = response_str[: -len(eos_token)]
 
-            ground_truth = data_item.non_tensor_batch["reward_model"]["ground_truth"]
+            #ground_truth = data_item.non_tensor_batch["reward_model"]["ground_truth"]
+
+            ground_truth = data_item.non_tensor_batch["reward_model"]
+            sql_return = data_item.non_tensor_batch.get("retrieve_answer", None)
 
             data_source = data_item.non_tensor_batch[self.reward_fn_key]
 
@@ -94,7 +97,7 @@ class DAPORewardManager(AbstractRewardManager):
 
             result = self.compute_score(
                 data_source=data_source,
-                solution_str=response_str,
+                solution_str=sql_return,
                 ground_truth=ground_truth,
                 extra_info=extra_info,
             )
