@@ -256,6 +256,9 @@ class TaskRunner:
 
         from verl.utils.dataset.rl_dataset import collate_fn
 
+        from retrieve_agent.env_manager import RetrieveEnvironmentManager
+        env = RetrieveEnvironmentManager(config, tokenizer)
+
         # Create training and validation datasets.
         train_dataset = create_rl_dataset(config.data.train_files, config.data, tokenizer, processor, is_train=True)
         val_dataset = create_rl_dataset(config.data.val_files, config.data, tokenizer, processor, is_train=False)
@@ -275,6 +278,7 @@ class TaskRunner:
             val_dataset=val_dataset,
             collate_fn=collate_fn,
             train_sampler=train_sampler,
+            env=env,
         )
         # Initialize the workers of the trainer.
         trainer.init_workers()

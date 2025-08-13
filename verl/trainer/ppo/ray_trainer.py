@@ -316,6 +316,7 @@ class RayPPOTrainer:
         collate_fn=None,
         train_sampler: Optional[Sampler] = None,
         device_name=None,
+        env=None,
     ):
         """
         Initialize distributed PPO trainer with Ray backend.
@@ -380,6 +381,8 @@ class RayPPOTrainer:
                 stacklevel=2,
             )
             self.use_critic = False
+
+        self.env = env
 
         self._validate_config()
         self._create_dataloader(train_dataset, val_dataset, collate_fn, train_sampler)
@@ -698,6 +701,7 @@ class RayPPOTrainer:
             else:
                 test_output_gen_batch_padded = self.async_rollout_manager.generate_sequences(test_gen_batch_padded)
 
+            test_output_gen_batch_padded = self.env.process_batch(test_output_gen_batch_padded)
             # unpad
             test_output_gen_batch = unpad_dataproto(test_output_gen_batch_padded, pad_size=pad_size)
 
@@ -1143,6 +1147,10 @@ class RayPPOTrainer:
                             gen_batch_output = self.async_rollout_manager.generate_sequences(gen_batch)
                         timing_raw.update(gen_batch_output.meta_info["timing"])
                         gen_batch_output.meta_info.pop("timing", None)
+
+                        if self.env is not None:
+                            # if env is set, we will use it to generate the responses
+                            gen_batch_output = self.env.process_batch(gen_batch_output)
 
                     if self.config.algorithm.adv_estimator == AdvantageEstimator.REMAX:
                         if self.reward_fn is None:
